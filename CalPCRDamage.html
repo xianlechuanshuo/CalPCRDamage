@@ -36,20 +36,20 @@
 		<tr>
 			<th>减甲DEBUFF</th>
 			<td>
-				<input type="text" id="txtDefenceDownDeBuff"/>
+				<input type="text" id="txtDefenceDownDeBuff" class="autoCalc"/>
 			</td>	
 		</tr>					
 
 		<tr>
 			<th>目标防御</th>
 			<td>
-				<input type="text" id="txtDefence" value="92"/>
+				<input type="text" id="txtDefence" value="92" class="autoCalc"/>
 			</td>	
 		</tr>	
 		<tr>
 			<th>防御穿透(隐藏属性)</th>
 			<td>
-				<input type="text" id="txtDefenceBreak"/>
+				<input type="text" id="txtDefenceBreak" class="autoCalc"/>
 			</td>	
 		</tr>	
 		<tr>
@@ -109,6 +109,12 @@
 		initialCharacters();
 		loadCharacterStatus();
 
+		$(".autoCalc").blur(function(){
+			let tmp=$(this).val();
+			if(isNaN(tmp)){//非数值才转换
+				$(this).val(eval2(tmp));
+			}
+		})
 
 		$("#ddlCharacters").change(function(event) {
 			loadCharacterStatus();
