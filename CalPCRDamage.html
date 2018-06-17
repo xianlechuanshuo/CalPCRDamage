@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>计算公主连接伤害</title>
+</head>
+<body>
+	
+	<table>
+		<tr>
+			<th>角色</th>
+			<td>
+				<select id="ddlCharacters">
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<th>攻击</th>
+			<td>
+				<input type="text" id="txtAtk" />
+			</td>	
+		</tr>
+		</tr>
+		<tr>
+			<th>EX攻击</th>
+			<td>
+				<input type="text" id="txtExAtk" />
+			</td>	
+		</tr>
+		<tr>
+			<th>攻击BUFF</th>
+			<td>
+				<input type="text" id="txtAtkBuff"/>
+			</td>	
+		</tr>	
+		<tr>
+			<th>减甲DEBUFF</th>
+			<td>
+				<input type="text" id="txtDefenceDownDeBuff"/>
+			</td>	
+		</tr>					
+
+		<tr>
+			<th>目标防御</th>
+			<td>
+				<input type="text" id="txtDefence" value="92"/>
+			</td>	
+		</tr>	
+		<tr>
+			<th>防御穿透(隐藏属性)</th>
+			<td>
+				<input type="text" id="txtDefenceBreak"/>
+			</td>	
+		</tr>	
+		<tr>
+			<th><label for="ckIsCritical">是否暴击</label></th>
+			<td>
+
+				<input type="checkbox" id="ckIsCritical" />
+			</td>	
+		</tr>		
+		<tr>
+			<th>结果</th>
+			<td>
+				<span id="result"></span>
+			</td>	
+		</tr>
+		<tr>
+			<td colspan="2">
+				<input type="button" id="btnCal" value="计算UB伤害">
+			</td>	
+		</tr>						
+	</table>	
+</body>
+</html>
+<script src="jquery-3.3.1.js"></script>
+<script type="text/javascript">
+
+	"use strict";
+
+	var characters=
+	[
+		{name:"meigong",showName:"妹弓",star:5,lv:97, atk:3984,exAtk:1695,atkBuff:1470,defenceDownDeBuff:0,defenceBreak:0,calUBDamageExpression:function(skill_level,atk){return 20.4 + 20.4*skill_level + 1.62 * atk;}},
+		{name:"xixuegui",showName:"吸血鬼",star:5,lv:96,atk:4689,exAtk:1680,atkBuff:0,defenceDownDeBuff:0,defenceBreak:0,calUBDamageExpression:function(skill_level,atk){return 27.0 + 27.0*skill_level + 2.16 * atk;}},
+		{name:"maoerli",showName:"毛二力",star:5,lv:96,atk:3336,exAtk:1455,atkBuff:146,defenceDownDeBuff:0,defenceBreak:0,calUBDamageExpression:function(skill_level,atk){return 18.0 + 18.0*skill_level + 1.44 * atk;}},
+		{name:"dous",showName:"抖S",star:5,lv:97,atk:3740,exAtk:1695,atkBuff:0,defenceDownDeBuff:118,defenceBreak:0,calUBDamageExpression:function(skill_level,atk){return 20.4 + 20.4*skill_level + 1.62 * atk;}},
+		{name:"shanzi",showName:"扇子",star:5,lv:96,atk:4085,exAtk:1680,atkBuff:0,defenceDownDeBuff:0,defenceBreak:0,calUBDamageExpression:function(skill_level,atk){return 18.0 + 18.0*skill_level + 1.44 * atk;}},		
+	]
+	function initialCharacters(){
+		characters.forEach(function(character){
+			$("#ddlCharacters").append(`<option value="${character.name}">【${character.star}】【LV.${character.lv}】${character.showName}</option>`);
+		})
+	}
+	function findCharacter(c){		
+		if(c.name==$("#ddlCharacters option:selected").val()){
+			return c;
+		}
+	}
+	function loadCharacterStatus(){
+		let chooseCharacter=characters.find(findCharacter);
+		$("#txtAtk").val(chooseCharacter.atk);
+		$("#txtExAtk").val(chooseCharacter.exAtk);
+		$("#txtAtkBuff").val(chooseCharacter.atkBuff);
+		//$("#txtDefenceDownDeBuff").val(chooseCharacter.defenceDownDeBuff);
+		$("#txtDefenceDownDeBuff").val("118");
+		$("#txtDefenceBreak").val(chooseCharacter.defenceBreak);	
+	}
+	$(function(){
+		initialCharacters();
+		loadCharacterStatus();
+
+
+		$("#ddlCharacters").change(function(event) {
+			loadCharacterStatus();
+			$("#result").empty();
+		});
+		$("#btnCal").click(function(event) {
+			if($("#ddlCharacters option:selected").val()=="-1"){
+				alert("请选择角色");
+				return;
+			}
+
+			//穿透不是减防debuff，是个隐藏属性
+			//防御本身是计算过减防的值
+			let chooseCharacter=characters.find(findCharacter),
+				damage=chooseCharacter.calUBDamageExpression(chooseCharacter.lv,eval2(`${$("#txtAtk").val()}+${$("#txtExAtk").val()}+${$("#txtAtkBuff").val()}`)),
+				isCritical=$("#ckIsCritical").prop("checked")?1:0,
+				defence=$("#txtDefence").val(),//防御
+				defenceDownDeBuff=$("#txtDefenceDownDeBuff").val(),//减甲DeBuff
+				defenceBreak=$("#txtDefenceBreak").val();//防御穿透(隐藏属性)
+				
+				damage=Math.floor(damage*(1+isCritical*1)*(1-(Math.max(defence-defenceDownDeBuff,0)-defenceBreak)/(Math.max(defence-defenceDownDeBuff,0)+100)));
+
+			$("#result").text(damage);
+		});
+
+	})
+	//eval替代方法
+	function eval2(str){
+	    let result;
+	    try{
+	        result = new Function('return '+str)();
+	    }
+	    catch(e){
+	        return 0;
+	    }
+
+	    return isNaN(result)?0:result;
+	}   	
+</script>
